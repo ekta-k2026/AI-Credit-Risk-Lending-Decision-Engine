@@ -40,9 +40,29 @@ int_rate = st.number_input(
 value=10.0
 )
 
-installment = st.number_input(
-"Monthly Installment",
-value=300.0
+loan_tenure = st.number_input(
+    "Loan Tenure (Years)",
+    value=5,
+    min_value=1
+)
+monthly_rate = (
+    int_rate / 100
+) / 12
+
+num_payments = (
+    loan_tenure * 12
+)
+
+installment = (
+    loan_amnt
+    * monthly_rate
+    * (1 + monthly_rate) ** num_payments
+) / (
+    (1 + monthly_rate) ** num_payments - 1
+)
+st.metric(
+    "Calculated Monthly Installment",
+    f"₹{installment:.2f}"
 )
 
 avg_fico = st.number_input(
@@ -61,20 +81,22 @@ home_ownership = st.selectbox(
 )
 
 purpose = st.selectbox(
-"Loan Purpose",
-[
-"credit_card",
-"debt_consolidation",
-"home_improvement",
-"house",
-"major_purchase",
-"medical",
-"moving",
-"other",
-"renewable_energy",
-"small_business",
-"vacation"
-]
+    "Loan Purpose",
+    [
+        "credit_card",
+        "debt_consolidation",
+        "home_improvement",
+        "house",
+        "major_purchase",
+        "medical",
+        "moving",
+        "other",
+        "renewable_energy",
+        "small_business",
+        "vacation",
+        "education",
+        "vehicle"
+    ]
 )
 
 grade = st.selectbox(
@@ -109,23 +131,33 @@ if st.button("Predict Risk"):
     input_df["home_ownership_RENT"] = int(
     home_ownership == "RENT"
 )
+    if purpose == "education":
+        purpose_for_model = "other"
+
+    elif purpose == "vehicle":
+        purpose_for_model = "major_purchase"
+
+    else:
+        purpose_for_model = purpose
 
 # Purpose Encoding
     for p in [
-        "credit_card",
-        "debt_consolidation",
-        "home_improvement",
-        "house",
-        "major_purchase",
-        "medical",
-        "moving",
-        "other",
-        "renewable_energy",
-        "small_business",
-        "vacation"
+    "credit_card",
+    "debt_consolidation",
+    "home_improvement",
+    "house",
+    "major_purchase",
+    "medical",
+    "moving",
+    "other",
+    "renewable_energy",
+    "small_business",
+    "vacation"
 ]:
-        input_df[f"purpose_{p}"] = int(
-        purpose == p
+    
+
+     input_df[f"purpose_{p}"] = int(
+           purpose_for_model == p
     )
 
 # Grade Encoding
@@ -144,12 +176,14 @@ if st.button("Predict Risk"):
     )
 
 # Risk Category
-    if risk_score < 30:
-        risk_category = "Low Risk"
-    elif risk_score < 60:
-        risk_category = "Medium Risk"
+    if risk_score < 20:
+     risk_category = "Low Risk"
+
+    elif risk_score < 50:
+     risk_category = "Medium Risk"
+
     else:
-        risk_category = "High Risk"
+     risk_category = "High Risk"
 
 # Lending Decision
     if risk_category == "Low Risk":
@@ -194,20 +228,23 @@ if st.button("Predict Risk"):
     st.subheader("📋 Decision Explanation")
 
     if decision == "Approve":
-      st.write(
-        "The borrower demonstrates a relatively low risk profile based on the information provided."
+     st.write(
+        "The borrower has a low predicted probability of default. "
+        "The combination of credit profile, income level, loan characteristics, "
+        "and repayment capacity indicates relatively low lending risk."
     )
 
     elif decision == "Review":
-      st.write(
-        "The borrower presents moderate risk. Additional review is recommended before approval."
+     st.write(
+        "The borrower presents moderate risk. Additional verification or manual review "
+        "is recommended before making a final lending decision."
     )
-
     else:
-        st.write(
-        "The borrower presents elevated risk. Loan approval is not recommended."
+     st.write(
+        "The model predicts a high probability of default. "
+        "The borrower's financial profile and loan characteristics indicate "
+        "elevated lending risk."
     )
-
 
 st.markdown("---")
 
