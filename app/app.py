@@ -10,7 +10,7 @@ model = joblib.load(
 
 # App Title
 
-st.title("🏦 AI Credit Risk Lending Decision Engine")
+st.title("🏦 AI Credit Risk Assessment")
 
 st.markdown(
 "Assess borrower risk and generate lending decisions using an AI-powered credit risk model."
@@ -20,93 +20,113 @@ st.markdown(
 
 st.subheader("Borrower Information")
 
-loan_amnt = st.number_input(
-"Loan Amount",
-value=10000
-)
+col1, col2 = st.columns(2)
 
-annual_inc = st.number_input(
-"Annual Income",
-value=50000
-)
+with col1:
 
-dti = st.number_input(
-"Debt-to-Income Ratio",
-value=15.0
-)
+    loan_amnt = st.number_input(
+        "Loan Amount",
+        value=10000
+    )
 
-int_rate = st.number_input(
-"Interest Rate",
-value=10.0
-)
+    annual_inc = st.number_input(
+        "Annual Income",
+        value=50000
+    )
+    
+    avg_fico = st.number_input(
+        "FICO Score",
+        value=700
+    )
 
-loan_tenure = st.number_input(
-    "Loan Tenure (Years)",
-    value=5,
-    min_value=1
-)
-monthly_rate = (
-    int_rate / 100
-) / 12
+    emp_length_num = st.number_input(
+        "Employment Length (Years)",
+        value=5
+    )
 
-num_payments = (
-    loan_tenure * 12
-)
+    home_ownership = st.selectbox(
+        "Home Ownership",
+        ["RENT", "OWN", "MORTGAGE"]
+    )
 
-installment = (
-    loan_amnt
-    * monthly_rate
-    * (1 + monthly_rate) ** num_payments
-) / (
-    (1 + monthly_rate) ** num_payments - 1
-)
+with col2:
+
+    dti = st.number_input(
+        "Debt-to-Income Ratio",
+        value=15.0
+    )
+
+    int_rate = st.number_input(
+        "Interest Rate",
+        value=10.0
+    )
+
+    loan_tenure = st.number_input(
+        "Loan Tenure (Years)",
+        value=5,
+        min_value=1
+    )
+
+    purpose = st.selectbox(
+        "Loan Purpose",
+        [
+            "credit_card",
+            "debt_consolidation",
+            "home_improvement",
+            "house",
+            "major_purchase",
+            "medical",
+            "moving",
+            "other",
+            "renewable_energy",
+            "small_business",
+            "vacation",
+            "education",
+            "vehicle"
+        ]
+    )
+
+    grade = st.selectbox(
+        "Loan Grade",
+        ["A", "B", "C", "D", "E", "F", "G"]
+    )
+monthly_rate = (int_rate / 100) / 12
+num_payments = loan_tenure * 12
+
+if monthly_rate == 0:
+    installment = loan_amnt / num_payments
+else:
+    installment = (
+        loan_amnt
+        * monthly_rate
+        * (1 + monthly_rate) ** num_payments
+    ) / (
+        (1 + monthly_rate) ** num_payments - 1
+    )
+
+st.subheader("💰 Loan Summary")    
+
 st.metric(
     "Calculated Monthly Installment",
     f"₹{installment:.2f}"
 )
 
-avg_fico = st.number_input(
-"FICO Score",
-value=700
-)
-
-emp_length_num = st.number_input(
-"Employment Length (Years)",
-value=5
-)
-
-home_ownership = st.selectbox(
-"Home Ownership",
-["RENT", "OWN", "MORTGAGE"]
-)
-
-purpose = st.selectbox(
-    "Loan Purpose",
-    [
-        "credit_card",
-        "debt_consolidation",
-        "home_improvement",
-        "house",
-        "major_purchase",
-        "medical",
-        "moving",
-        "other",
-        "renewable_energy",
-        "small_business",
-        "vacation",
-        "education",
-        "vehicle"
-    ]
-)
-
-grade = st.selectbox(
-"Loan Grade",
-["A", "B", "C", "D", "E", "F", "G"]
-)
 
 # Prediction
 
-if st.button("Predict Risk"):
+left, center, right = st.columns([1, 2, 1])
+
+
+with center:
+    predict = st.button(
+        "🔍 Predict Risk",
+        use_container_width=True
+    )
+
+
+if predict:
+
+
 
  
     input_df = pd.DataFrame({
@@ -176,7 +196,7 @@ if st.button("Predict Risk"):
     )
 
 # Risk Category
-    if risk_score < 20:
+    if risk_score < 30:
      risk_category = "Low Risk"
 
     elif risk_score < 50:
@@ -245,6 +265,27 @@ if st.button("Predict Risk"):
         "The borrower's financial profile and loan characteristics indicate "
         "elevated lending risk."
     )
+    risk_factors = []
+
+    if avg_fico < 600:
+      risk_factors.append("Low FICO score")
+
+    if annual_inc < 30000:
+      risk_factors.append("Low annual income")
+
+    if loan_amnt > annual_inc:
+      risk_factors.append("Loan amount exceeds annual income")
+
+    if int_rate > 20:
+      risk_factors.append("High interest rate")
+
+    if emp_length_num < 2:
+      risk_factors.append("Short employment history")
+
+    if risk_factors:
+      st.markdown("### Key Risk Factors")
+      for factor in risk_factors:
+        st.write(f"• {factor}")
 
 st.markdown("---")
 
