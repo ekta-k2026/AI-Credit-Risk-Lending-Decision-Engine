@@ -107,9 +107,10 @@ else:
 st.subheader("💰 Loan Summary")    
 
 st.metric(
-    "Calculated Monthly Installment",
+    "Estimated Monthly Installment",
     f"₹{installment:.2f}"
 )
+st.markdown("---")
 
 
 # Prediction
@@ -290,5 +291,5 @@ if predict:
 st.markdown("---")
 
 st.caption(
-"Built with XGBoost, Streamlit, and Explainable AI techniques."
+"Built using Python, XGBoost, Streamlit, and Explainable AI."
 )
